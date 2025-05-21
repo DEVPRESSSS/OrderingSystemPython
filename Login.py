@@ -221,8 +221,12 @@ class LoginApp(customtkinter.CTk):
         print(f"Login attempt: {username} / {password}")
         print(f"Remember me: {self.remember_var.get()}")
         
-        # For demo purposes, allowing any login
-        self.open_main_app()
+
+        if username != "admin" or password != "password":
+            self.show_error("Invalid username or password.")
+            return
+        else:
+            self.open_main_app()
     
     def show_error(self, message):
         error_window = customtkinter.CTkToplevel(self)
@@ -273,8 +277,16 @@ class LoginApp(customtkinter.CTk):
     
     def open_main_app(self):
         print("Opening main application")
-        self.destroy()
+        self.withdraw()  # Hide the login window instead of destroying it
+        
+        # Create and run the main app
         main_app = App()
+    
+        def on_main_app_close():
+            main_app.destroy()
+            self.destroy()  
+        
+        main_app.protocol("WM_DELETE_WINDOW", on_main_app_close)
         main_app.mainloop()
 
 
