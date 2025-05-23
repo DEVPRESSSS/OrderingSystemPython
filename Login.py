@@ -2,10 +2,19 @@ import customtkinter
 import os
 from PIL import Image
 from main import App
+import hashlib
+from mysql.connector import Error
+from ConnectionString.ConnectionDb import DatabaseConnection
+
+
 class LoginApp(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         
+        # Initialize database connection
+        self.db = DatabaseConnection()
+        self.db.connect()  # Connect to database on initialization
+
         # Configure appearance
         customtkinter.set_appearance_mode("light")
         customtkinter.set_default_color_theme("green")
@@ -217,15 +226,16 @@ class LoginApp(customtkinter.CTk):
             self.show_error("Please enter both username and password.")
             return
         
-        print(f"Login attempt: {username} / {password}")
-        print(f"Remember me: {self.remember_var.get()}")
-        
+        user_data = self.authenticate_user(username, password)
+        if user_data:
+            print(f"User authenticated: {user_data}")
+            if user_data['roleID'] == 'User-101':
+                self.open_main_app(user_data)
+            else:
 
-        if username != "admin" or password != "password":
-            self.show_error("Invalid username or password.")
-            return
+                self.show_error("Access denied. Admins only.")
         else:
-            self.open_main_app()
+            self.show_error("Invalid username or password.")
     
     def show_error(self, message):
         error_window = customtkinter.CTkToplevel(self)
@@ -261,34 +271,67 @@ class LoginApp(customtkinter.CTk):
         )
         button.pack(pady=(10, 20))
         
-        # Make the error window modal
         error_window.transient(self)
         error_window.grab_set()
         self.wait_window(error_window)
     
     def forgot_password(self):
         print("Forgot password clicked")
-        # Here you would implement password recovery functionality
     
     def signup(self):
         print("Sign up clicked")
-        # Here you would implement sign up functionality
     
-    def open_main_app(self):
+    def open_main_app(self, user_data=None):
         print("Opening main application")
-        self.withdraw()  # Hide the login window instead of destroying it
+        self.withdraw() 
         
-        # Create and run the main app
-        main_app = App()
+        # Pass user_data to main app if needed
+        main_app = App()  # Modify App class to accept user_data if needed
     
         def on_main_app_close():
             main_app.destroy()
+            self.db.disconnect()  # Close database connection
             self.destroy()  
         
         main_app.protocol("WM_DELETE_WINDOW", on_main_app_close)
         main_app.mainloop()
 
+    def authenticate_user(self, username, password):
+        """Authenticate user credentials against database"""
 
+        # Check if database connection exists and is active
+        if not self.db.connection or not self.db.connection.is_connected():
+            if not self.db.connect():
+                print("Failed to connect to database")
+                return None
+        
+        try:
+            hashed_password = hashlib.sha256(password.encode()).hexdigest()
+            
+            query = "SELECT userID, username, roleID FROM appuser WHERE username = %s AND password = %s"
+            self.db.cursor.execute(query, (username, hashed_password))
+            result = self.db.cursor.fetchone()
+            
+            if result:
+                return {
+                    'userID': result[0],
+                    'username': result[1],
+                    'roleID': result[2]
+                }
+            
+
+            return None
+            
+        except Error as e:
+            print(f"Error during authentication: {e}")
+            return None
+
+    def __del__(self):
+        """Destructor to ensure database connection is closed"""
+        if hasattr(self, 'db') and self.db:
+            self.db.disconnect()
+
+    
 if __name__ == "__main__":
     app = LoginApp()
     app.mainloop()
