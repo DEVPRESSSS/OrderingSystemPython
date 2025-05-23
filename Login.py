@@ -217,7 +217,6 @@ class LoginApp(customtkinter.CTk):
             self.show_error("Please enter both username and password.")
             return
         
-        # Here you would add your authentication logic
         print(f"Login attempt: {username} / {password}")
         print(f"Remember me: {self.remember_var.get()}")
         

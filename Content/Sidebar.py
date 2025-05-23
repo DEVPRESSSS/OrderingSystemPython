@@ -1,7 +1,6 @@
 import customtkinter
-from Content.MenuContent import MenuContent
+from Content.MainContent import MainContent
 from Content.SettingsContent import SettingsContent
-
 class SideBar(customtkinter.CTkFrame):
     def __init__(self, master, **kwargs):
         # Remove width from here if specified in kwargs
@@ -59,8 +58,19 @@ class SideBar(customtkinter.CTkFrame):
         app.main_content.grid_forget()
         
         # Create new MenuContent as a child of the app, not the sidebar
-        app.main_content = MenuContent(app, fg_color="#ffffff",
-                                    corner_radius=8,                                   
+        # app.main_content = MenuContent(app, fg_color="#ffffff",
+        #                             corner_radius=8,                                   
+        #                             border_color="#DDDDDD",
+        #                             border_width=1)
+        # app.main_content.grid(row=0, 
+        #                 column=1, 
+        #                 sticky="nsew", 
+        #                 padx=6, 
+        #                 pady=6)
+        
+
+
+        app.main_content = MainContent(app, 
                                     border_color="#DDDDDD",
                                     border_width=1)
         app.main_content.grid(row=0, 
@@ -68,6 +78,7 @@ class SideBar(customtkinter.CTkFrame):
                         sticky="nsew", 
                         padx=6, 
                         pady=6)
+                
                 
 
     #Settings Button Event
